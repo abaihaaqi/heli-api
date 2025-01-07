@@ -14,10 +14,11 @@ type API struct {
 	applianceService     service.ApplianceService
 	userApplianceService service.UserApplianceService
 	consumptionService   service.ConsumptionService
+	chatService          service.ChatService
 	mux                  *http.ServeMux
 }
 
-func NewAPI(userService service.UserService, sessionService service.SessionService, applianceService service.ApplianceService, userApplianceService service.UserApplianceService, consumptionService service.ConsumptionService) API {
+func NewAPI(userService service.UserService, sessionService service.SessionService, applianceService service.ApplianceService, userApplianceService service.UserApplianceService, consumptionService service.ConsumptionService, chatService service.ChatService) API {
 	mux := http.NewServeMux()
 	api := API{
 		userService,
@@ -25,6 +26,7 @@ func NewAPI(userService service.UserService, sessionService service.SessionServi
 		applianceService,
 		userApplianceService,
 		consumptionService,
+		chatService,
 		mux,
 	}
 
@@ -38,6 +40,7 @@ func NewAPI(userService service.UserService, sessionService service.SessionServi
 
 	// User Appliance
 	mux.Handle("/user-appliance/get-all", api.Get(api.Auth(http.HandlerFunc(api.FetchAllUserAppliance))))
+	mux.Handle("/user-appliance/get-all-rooms", api.Get(api.Auth(http.HandlerFunc(api.FetchUserApplianceRooms))))
 	mux.Handle("/user-appliance/get", api.Get(api.Auth(http.HandlerFunc(api.FetchUserApplianceByID))))
 	mux.Handle("/user-appliance/add", api.Post(api.Auth(http.HandlerFunc(api.StoreUserAppliance))))
 	mux.Handle("/user-appliance/update", api.Put(api.Auth(http.HandlerFunc(api.UpdateUserAppliance))))
@@ -47,6 +50,10 @@ func NewAPI(userService service.UserService, sessionService service.SessionServi
 	mux.Handle("/consumption/get-all", api.Get(api.Auth(http.HandlerFunc(api.FetchAllConsumptions))))
 	mux.Handle("/consumption/add", api.Post(api.Auth(http.HandlerFunc(api.StoreConsumption))))
 	mux.Handle("/consumption/reset", api.Delete(api.Auth(http.HandlerFunc(api.ResetConsumption))))
+
+	// Chat with AI
+	mux.Handle("/chat/analyze-data", api.Post(api.Auth(http.HandlerFunc(api.AnalyzeData))))
+	mux.Handle("/chat/new", api.Post(api.Auth(http.HandlerFunc(api.ChatWithAI))))
 
 	return api
 }

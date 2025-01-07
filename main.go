@@ -1,14 +1,31 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/ijaybaihaqi/heli-api/api"
 	"github.com/ijaybaihaqi/heli-api/db"
 	"github.com/ijaybaihaqi/heli-api/model"
 	"github.com/ijaybaihaqi/heli-api/repository"
 	"github.com/ijaybaihaqi/heli-api/service"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Retrieve the Hugging Face token from the environment variables
+	token := os.Getenv("HUGGINGFACE_TOKEN")
+	if token == "" {
+		log.Fatal("HUGGINGFACE_TOKEN is not set in the .env file")
+	}
+
 	db := db.NewDB()
 	dbCredential := model.Credential{
 		Host:         "localhost",
@@ -33,28 +50,34 @@ func main() {
 
 	// appliances := []model.Appliance{
 	// 	{
-	// 		Name:  "Refrigerator",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/US_Domestic_Refrigerator_-_Frigidaire.jpg",
+	// 		Name:   "Refrigerator",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/2/2e/US_Domestic_Refrigerator_-_Frigidaire.jpg",
+	// 		Energy: 1.2,
 	// 	},
 	// 	{
-	// 		Name:  "TV",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/7/78/Early_portable_tv.jpg",
+	// 		Name:   "TV",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/7/78/Early_portable_tv.jpg",
+	// 		Energy: 0.8,
 	// 	},
 	// 	{
-	// 		Name:  "EVCar",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/8/8e/Ford_Explorer_EV_Auto_Zuerich_2023_1X7A1325.jpg",
+	// 		Name:   "EVCar",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/8/8e/Ford_Explorer_EV_Auto_Zuerich_2023_1X7A1325.jpg",
+	// 		Energy: 99.9,
 	// 	},
 	// 	{
-	// 		Name:  "Lamp",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Lamp_with_a_lampshade_illuminated_by_sunlight.jpg",
+	// 		Name:   "Lamp",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/2/2f/Lamp_with_a_lampshade_illuminated_by_sunlight.jpg",
+	// 		Energy: 0.5,
 	// 	},
 	// 	{
-	// 		Name:  "Air Conditioner",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/7/73/Room_air_conditioning_unit_above_a_green_curtain.jpg",
+	// 		Name:   "Air Conditioner",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/7/73/Room_air_conditioning_unit_above_a_green_curtain.jpg",
+	// 		Energy: 2.1,
 	// 	},
 	// 	{
-	// 		Name:  "Power Strip",
-	// 		Image: "https://upload.wikimedia.org/wikipedia/commons/9/95/Pikendusjuhe.jpg",
+	// 		Name:   "Power Strip",
+	// 		Image:  "https://upload.wikimedia.org/wikipedia/commons/9/95/Pikendusjuhe.jpg",
+	// 		Energy: 10,
 	// 	},
 	// }
 
@@ -73,7 +96,8 @@ func main() {
 	applianceService := service.NewApplianceService(applianceRepo)
 	userApplianceService := service.NewUserApplianceService(userApplianceRepo)
 	consumptionService := service.NewConsumptionService(consumptionRepo)
+	chatService := service.NewChatService(token)
 
-	mainAPI := api.NewAPI(userService, sessionService, applianceService, userApplianceService, consumptionService)
+	mainAPI := api.NewAPI(userService, sessionService, applianceService, userApplianceService, consumptionService, chatService)
 	mainAPI.Start()
 }

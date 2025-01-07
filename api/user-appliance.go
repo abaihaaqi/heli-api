@@ -28,6 +28,25 @@ func (api *API) FetchAllUserAppliance(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(userAppliances)
 }
 
+func (api *API) FetchUserApplianceRooms(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hit /user-appliance/get-all-rooms")
+
+	user, err := api.userService.FetchByUsername(api.userService.GetCurrentUsername())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	userApplianceRooms, err := api.userApplianceService.FetchUserRooms(user.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(userApplianceRooms)
+}
+
 func (api *API) FetchUserApplianceByID(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hit /user-appliance/get")
 
@@ -79,9 +98,15 @@ func (api *API) StoreUserAppliance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := fmt.Sprintf("Successfully add appliance to room %s", req.Room)
+	userAppliance, err := api.userApplianceService.FetchByID(int(newUserAppliance.ID))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(model.SuccessResponse{Message: message})
+	json.NewEncoder(w).Encode(userAppliance)
 }
 
 func (api *API) UpdateUserAppliance(w http.ResponseWriter, r *http.Request) {
@@ -105,8 +130,15 @@ func (api *API) UpdateUserAppliance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userAppliance, err := api.userApplianceService.FetchByID(int(req.ID))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(model.SuccessResponse{Message: "User Appliance berhasil diubah"})
+	json.NewEncoder(w).Encode(userAppliance)
 }
 
 func (api *API) DeleteUserAppliance(w http.ResponseWriter, r *http.Request) {

@@ -26,8 +26,9 @@ type Session struct {
 
 type Appliance struct {
 	gorm.Model
-	Name  string `json:"appliance_name"`
-	Image string `json:"image"`
+	Name   string  `json:"appliance_name"`
+	Image  string  `json:"image"`
+	Energy float64 `json:"energy"`
 
 	UserAppliances []UserAppliance `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

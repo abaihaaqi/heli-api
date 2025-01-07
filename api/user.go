@@ -114,10 +114,11 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Path:    "/",
-		Value:   sessionToken,
-		Expires: expiresAt,
+		Name:     "session_token",
+		Path:     "/",
+		Value:    sessionToken,
+		Expires:  expiresAt,
+		HttpOnly: true,
 	})
 
 	w.WriteHeader(http.StatusOK)

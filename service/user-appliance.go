@@ -6,10 +6,11 @@ import (
 )
 
 type UserApplianceService interface {
-	FetchAll(userID uint) ([]model.UserApplianceResponse, error)
+	FetchAll(userID uint) (map[string][]model.UserApplianceResponse, error)
+	FetchUserRooms(userID uint) ([]string, error)
 	FetchByID(id int) (*model.UserApplianceResponse, error)
 	Store(s *model.UserAppliance) error
-	Update(id string, s *model.UserAppliance) error
+	Update(id uint, s *model.UserAppliance) error
 	Delete(id string) error
 }
 
@@ -21,13 +22,45 @@ func NewUserApplianceService(userApplianceRepository repository.UserApplianceRep
 	return &userApplianceService{userApplianceRepository}
 }
 
-func (s *userApplianceService) FetchAll(userID uint) ([]model.UserApplianceResponse, error) {
+func (s *userApplianceService) FetchAll(userID uint) (map[string][]model.UserApplianceResponse, error) {
 	userAppliances, err := s.userApplianceRepository.FetchAll(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return userAppliances, nil
+	userAppliancesByRoom := map[string][]model.UserApplianceResponse{}
+
+	for _, userAppliance := range userAppliances {
+		status, err := s.userApplianceRepository.FetchCurrentStatus(userAppliance.ID)
+		if err != nil {
+			return nil, err
+		}
+		if status.Status != "" {
+			userAppliance.CurrentStatus = status.Status
+		} else {
+			userAppliance.CurrentStatus = "off"
+		}
+		if len(userAppliancesByRoom[userAppliance.Room]) == 0 {
+			userAppliancesByRoom[userAppliance.Room] = []model.UserApplianceResponse{}
+		}
+		userAppliancesByRoom[userAppliance.Room] = append(userAppliancesByRoom[userAppliance.Room], userAppliance)
+	}
+
+	return userAppliancesByRoom, nil
+}
+
+func (s *userApplianceService) FetchUserRooms(userID uint) ([]string, error) {
+	userApplianceRooms, err := s.userApplianceRepository.FetchUserRooms(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	rooms := []string{}
+	for _, userApplianceRoom := range userApplianceRooms {
+		rooms = append(rooms, userApplianceRoom.Room)
+	}
+
+	return rooms, nil
 }
 
 func (s *userApplianceService) FetchByID(id int) (*model.UserApplianceResponse, error) {
@@ -48,7 +81,7 @@ func (s *userApplianceService) Store(userAppliance *model.UserAppliance) error {
 	return nil
 }
 
-func (s *userApplianceService) Update(id string, userAppliance *model.UserAppliance) error {
+func (s *userApplianceService) Update(id uint, userAppliance *model.UserAppliance) error {
 	err := s.userApplianceRepository.Update(id, userAppliance)
 	if err != nil {
 		return err
