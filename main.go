@@ -9,21 +9,19 @@ import (
 	"github.com/ijaybaihaqi/heli-api/model"
 	"github.com/ijaybaihaqi/heli-api/repository"
 	"github.com/ijaybaihaqi/heli-api/service"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
 	// Load the .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Retrieve the Hugging Face token from the environment variables
-	token := os.Getenv("HUGGINGFACE_TOKEN")
-	if token == "" {
-		log.Fatal("HUGGINGFACE_TOKEN is not set in the .env file")
+	token, ok := os.LookupEnv("HUGGINGFACE_TOKEN")
+	if !ok {
+		log.Fatal("HUGGINGFACE_TOKEN is must be set")
 	}
 
 	db := db.NewDB()
