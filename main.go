@@ -25,16 +25,17 @@ func main() {
 	}
 
 	db := db.NewDB()
-	dbCredential := model.Credential{
-		Host:         "localhost",
-		Username:     "postgres",
-		Password:     "postgres",
-		DatabaseName: "heli_db",
-		Port:         5432,
-		Schema:       "public",
-	}
+	// dbCredential := model.Credential{
+	// 	Host:         "localhost",
+	// 	Username:     "postgres",
+	// 	Password:     "postgres",
+	// 	DatabaseName: "heli_db",
+	// 	Port:         5432,
+	// 	Schema:       "public",
+	// }
 
-	conn, err := db.Connect(&dbCredential)
+	// conn, err := db.Connect(&dbCredential)
+	conn, err := db.Connect()
 	if err != nil {
 		panic(err)
 	}
