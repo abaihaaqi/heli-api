@@ -64,13 +64,12 @@ func (api *API) Handler() *http.ServeMux {
 
 func (api *API) Start() {
 	// Enable CORS
-	// corsHandler := cors.New(cors.Options{
-	// 	AllowedOrigins:   []string{"http://localhost:8100"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowedHeaders:   []string{"Content-Type", "Authorization"},
-	// 	AllowCredentials: true,
-	// }).Handler(api.Handler())
-	corsHandler := cors.Default().Handler(api.Handler())
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}).Handler(api.Handler())
 
 	fmt.Println("starting web server at http://localhost:8080")
 	http.ListenAndServe(":8080", corsHandler)
