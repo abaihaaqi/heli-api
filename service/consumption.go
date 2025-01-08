@@ -7,7 +7,7 @@ import (
 
 type ConsumptionService interface {
 	FetchAll(userID uint) ([]model.ConsumptionResponse, error)
-	Store(s *model.Consumption) error
+	Store(s *model.Consumption) (model.ConsumptionResponse, error)
 	Reset(userID uint) error
 }
 
@@ -28,13 +28,18 @@ func (s *consumptionService) FetchAll(userID uint) ([]model.ConsumptionResponse,
 	return consumptions, nil
 }
 
-func (s *consumptionService) Store(consumption *model.Consumption) error {
+func (s *consumptionService) Store(consumption *model.Consumption) (model.ConsumptionResponse, error) {
 	err := s.consumptionRepository.Store(consumption)
 	if err != nil {
-		return err
+		return model.ConsumptionResponse{}, err
 	}
 
-	return nil
+	result, err := s.consumptionRepository.FetchByID(consumption.ID)
+	if err != nil {
+		return model.ConsumptionResponse{}, err
+	}
+
+	return *result, nil
 }
 
 func (s *consumptionService) Reset(userID uint) error {

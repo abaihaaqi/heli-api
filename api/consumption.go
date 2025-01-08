@@ -41,7 +41,7 @@ func (api *API) StoreConsumption(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.consumptionService.Store(&consumption)
+	result, err := api.consumptionService.Store(&consumption)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
@@ -49,7 +49,7 @@ func (api *API) StoreConsumption(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(consumption)
+	json.NewEncoder(w).Encode(result)
 }
 
 func (api *API) ResetConsumption(w http.ResponseWriter, r *http.Request) {

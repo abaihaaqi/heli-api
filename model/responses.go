@@ -12,6 +12,7 @@ type SuccessResponse struct {
 
 type UserResponse struct {
 	Username     string `json:"username"`
+	Name         string `json:"name"`
 	SessionToken string `json:"session_token"`
 	ExpiresAt    string `json:"expires_at"`
 }

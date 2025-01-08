@@ -12,7 +12,7 @@ type UserService interface {
 	GetCurrentUsername() string
 	SetCurrentUsername(username string)
 	FetchByUsername(username string) (*model.User, error)
-	Login(user model.User) error
+	Login(user model.User) (model.User, error)
 	Register(user model.User) error
 	CheckPassLength(pass string) bool
 	CheckPassAlphabet(pass string) bool
@@ -45,18 +45,18 @@ func (s *userService) FetchByUsername(username string) (*model.User, error) {
 	return user, nil
 }
 
-func (s *userService) Login(reqUser model.User) error {
+func (s *userService) Login(reqUser model.User) (model.User, error) {
 	user, err := s.userRepository.CheckAvail(reqUser)
 	if err != nil {
-		return err
+		return model.User{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqUser.Password))
 	if err != nil {
-		return fmt.Errorf("password not match")
+		return model.User{}, fmt.Errorf("password not match")
 	}
 
-	return nil
+	return user, nil
 }
 
 func (s *userService) Register(user model.User) error {

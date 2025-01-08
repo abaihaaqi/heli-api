@@ -7,6 +7,7 @@ import (
 
 type ConsumptionRepository interface {
 	FetchAll(userID uint) ([]model.ConsumptionResponse, error)
+	FetchByID(id uint) (*model.ConsumptionResponse, error)
 	Store(s *model.Consumption) error
 	Reset(userID uint) error
 }
@@ -26,6 +27,15 @@ func (s *consumptionRepoImpl) FetchAll(userID uint) ([]model.ConsumptionResponse
 		return nil, res.Error
 	}
 	return consumptions, nil
+}
+
+func (s *consumptionRepoImpl) FetchByID(id uint) (*model.ConsumptionResponse, error) {
+	userAppliance := model.ConsumptionResponse{}
+	response := s.db.Model(&model.Consumption{}).Select("consumptions.id AS id, consumptions.consumed_at, appliances.name AS appliance, user_appliances.room, consumptions.amount, consumptions.status").Joins("left join user_appliances on user_appliances.id = consumptions.user_appliance_id").Joins("left join appliances on appliances.id = user_appliances.appliance_id").Find(&model.UserAppliance{}, id).Scan(&userAppliance)
+	if err := response.Error; err != nil {
+		return nil, err
+	}
+	return &userAppliance, nil
 }
 
 func (s *consumptionRepoImpl) Store(consumption *model.Consumption) error {

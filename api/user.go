@@ -89,7 +89,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.userService.Login(creds)
+	user, err := api.userService.Login(creds)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
@@ -124,6 +124,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(model.UserResponse{
 		Username:     creds.Username,
+		Name:         user.Name,
 		SessionToken: sessionToken,
 		ExpiresAt:    expiresAt.Format(time.RFC3339),
 	})
