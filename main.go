@@ -54,7 +54,7 @@ func main() {
 		panic(res.Error)
 	}
 
-	if result == nil {
+	if len(result) == 0 {
 		appliances := []model.Appliance{
 			{
 				Name:   "Refrigerator",
