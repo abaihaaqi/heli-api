@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ijaybaihaqi/heli-api/model"
 )
 
@@ -96,8 +96,15 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionToken := uuid.NewString()
-	expiresAt := time.Now().Add(5 * time.Hour)
+	expiresAt := time.Now().Add(time.Hour * 12)
+
+	sessionToken, err := api.sessionService.GenerateJWT(user, expiresAt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
 	session := model.Session{Token: sessionToken, Username: creds.Username, Expiry: expiresAt}
 
 	err = api.sessionService.SessionAvailName(session.Username)
@@ -113,47 +120,68 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Path:     "/",
-		Value:    sessionToken,
-		Expires:  expiresAt,
-		HttpOnly: true,
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(model.LoginResponse{
+		SessionToken: sessionToken,
 	})
+}
+
+func (api *API) AutoLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hit /auth/autologin")
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		return
+	}
+
+	// Extract the token from the "Bearer" scheme
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	claims, err := api.sessionService.ValidateJWT(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if username, ok := claims["username"].(string); ok {
+		err = api.sessionService.SessionAvailName(username)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(model.ErrorResponse{Error: "Token is not valid"})
+			return
+		}
+	}
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(model.ErrorResponse{Error: "Internal Server Error"})
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(model.UserResponse{
-		Username:     creds.Username,
-		Name:         user.Name,
-		SessionToken: sessionToken,
-		ExpiresAt:    expiresAt.Format(time.RFC3339),
+	json.NewEncoder(w).Encode(model.SuccessResponse{
+		Message: "Welcome back",
 	})
 }
 
 func (api *API) Logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hit /auth/logout")
 
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(model.ErrorResponse{Error: "Internal Server Error"})
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(model.ErrorResponse{Error: "Internal Server Error"})
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
 		return
 	}
-	sessionToken := c.Value
 
-	api.sessionService.DeleteSession(sessionToken)
+	// Extract the token from the "Bearer" scheme
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	_, err := api.sessionService.ValidateJWT(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Path:    "/",
-		Value:   "",
-		Expires: time.Now(),
-	})
+	api.sessionService.DeleteSession(tokenString)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(model.SuccessResponse{Message: "Logout Success"})

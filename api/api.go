@@ -33,6 +33,7 @@ func NewAPI(userService service.UserService, sessionService service.SessionServi
 	// User
 	mux.Handle("/auth/register", api.Post(http.HandlerFunc(api.Register)))
 	mux.Handle("/auth/login", api.Post(http.HandlerFunc(api.Login)))
+	mux.Handle("/auth/autologin", api.Get(http.HandlerFunc(api.AutoLogin)))
 	mux.Handle("/auth/logout", api.Get(api.Auth(http.HandlerFunc(api.Logout))))
 
 	// Appliance
@@ -65,10 +66,9 @@ func (api *API) Handler() *http.ServeMux {
 func (api *API) Start() {
 	// Enable CORS
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
+		AllowedOrigins: []string{"http://localhost:8100"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
 	}).Handler(api.Handler())
 
 	fmt.Println("starting web server at http://localhost:8080")

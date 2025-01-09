@@ -10,11 +10,8 @@ type SuccessResponse struct {
 	Message string `json:"message"`
 }
 
-type UserResponse struct {
-	Username     string `json:"username"`
-	Name         string `json:"name"`
+type LoginResponse struct {
 	SessionToken string `json:"session_token"`
-	ExpiresAt    string `json:"expires_at"`
 }
 
 type ApplianceResponse struct {

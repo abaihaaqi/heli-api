@@ -4,27 +4,28 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/ijaybaihaqi/heli-api/model"
 )
 
 func (api *API) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("session_token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
-				return
-			}
-
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Authorization header missing", http.StatusUnauthorized)
 			return
 		}
-		session := c.Value
 
-		sessionFound, err := api.sessionService.TokenValidity(session)
+		// Extract the token from the "Bearer" scheme
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		_, err := api.sessionService.ValidateJWT(tokenString)
+		if err != nil {
+			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		sessionFound, err := api.sessionService.TokenValidity(tokenString)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(model.ErrorResponse{Error: err.Error()})
