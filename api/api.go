@@ -66,7 +66,7 @@ func (api *API) Handler() *http.ServeMux {
 func (api *API) Start() {
 	// Enable CORS
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:8100"},
+		AllowedOrigins: []string{"http://localhost", "http://localhost:8100"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 	}).Handler(api.Handler())
